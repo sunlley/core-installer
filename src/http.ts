@@ -1,32 +1,38 @@
-const {EventEmitter} = require('events');
+import {EventEmitter} from "events";
+import {AbortController} from "node-abort-controller";
+import axios from 'axios';
 
 class HttpInstaller extends EventEmitter {
-    constructor(configs, target, multiple = false, debug = false) {
+    private configs:any;
+    private target:any;
+    private multiple:boolean;
+    private debug:boolean;
+    private signals:any={}
+    private initial:boolean=false;
+    constructor(configs:any, target?:any, multiple = false, debug = false) {
         super();
         this.configs = configs;
         this.target = target != null ? target : this;
         this.multiple = multiple;
         this.debug = debug;
-        this.signals={};
         if (!this.target.HTTP) {
             this.target.HTTP = {}
         }
     }
 
-    log(...data) {
+    log(...data:any) {
         if (this.debug) {
+            // @ts-ignore
             console.log(`🐰😁[HTTP]`, `${this.dateTime()}`, ...data)
         }
     }
 
     dateTime() {
         const date = new Date();
-        // let f ='hh:mm:ss';
-        let f = `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
-        return f;
+        return `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
     }
 
-    randomInt(maxNum) {
+    randomInt(maxNum:number) {
         if (maxNum <= 0) {
             return 0;
         }
@@ -67,7 +73,7 @@ class HttpInstaller extends EventEmitter {
 
     }
 
-    createClient(options, name) {
+    createClient(options:any, name?:string|null) {
         const _this = this;
         return new Promise(async (resolve, reject) => {
             const id = _this.randomStr();
@@ -83,17 +89,15 @@ class HttpInstaller extends EventEmitter {
                 name = name.toUpperCase();
                 _this.log(`create client [${name}]`);
             }
-            const axios = require('axios');
             const client = axios.create(config);
-            const post = (path, params) => {
-
+            const post = (path:string, params?:any) => {
                 return new Promise((resolve1, reject1) => {
                     if (typeof path !== 'string' || path === '') {
                         reject1(new Error(`No path found or path's type is not string`));
                     }
                     const _cancel_key = params._cancel_key;
                     delete params._cancel_key;
-                    const option={};
+                    const option:any={};
                     if (_cancel_key){
                         const controller = new AbortController()
                         option.signal = controller.signal;
@@ -108,15 +112,14 @@ class HttpInstaller extends EventEmitter {
                             reject1(error);
                         });
 
-                })
+                });
             }
-            const get = (path, params) => {
-
+            const get = (path:string, params?:any) => {
                 return new Promise((resolve1, reject1) => {
                     if (typeof path !== 'string' || path === '') {
                         reject1(new Error(`No path found or path's type is not string`));
                     }
-                    let query = [];
+                    const query:any = [];
                     for (const paramsKey in params) {
                         query.push(`${paramsKey}=${params[paramsKey]}`);
                     }
@@ -131,7 +134,7 @@ class HttpInstaller extends EventEmitter {
                     }
                     const _cancel_key = params._cancel_key;
                     delete params._cancel_key;
-                    const option={};
+                    const option:any={};
                     if (_cancel_key){
                         const controller = new AbortController()
                         option.signal = controller.signal;
@@ -144,11 +147,10 @@ class HttpInstaller extends EventEmitter {
                         .catch((error) => {
                             reject1(error);
                         })
-                })
-
+                });
             }
 
-            const cancel = (_cancel_key) => {
+            const cancel = (_cancel_key:string) => {
                 if (_this.signals[_cancel_key]){
                     _this.signals[_cancel_key].abort()
                 }
@@ -169,5 +171,4 @@ class HttpInstaller extends EventEmitter {
         })
     }
 }
-// export default HttpInstaller;
-module.exports = HttpInstaller;
+export default HttpInstaller;

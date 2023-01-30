@@ -1,6 +1,8 @@
-.idea
-view
-node_modules
-yarn.lock
+src
+tsconfig.json
+tslint.json
+.prettierrc
 package-lock.json
-logs
+test.js
+.idea
+.git

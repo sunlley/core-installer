@@ -1,8 +1,12 @@
-const {EventEmitter} = require('events');
-const Mysql = require('mysql2');
-const RDSClient  = require('ali-rds');
+import {EventEmitter} from "events";
+import {createPool} from 'mysql2';
 
 class MysqlInstaller extends  EventEmitter{
+    private configs:any;
+    private target:any;
+    private multiple:boolean;
+    private debug:boolean;
+    private initial:boolean=false;
 
     /**
      *
@@ -11,7 +15,7 @@ class MysqlInstaller extends  EventEmitter{
      * @param multiple {boolean} 是否是多个
      * @param debug 是否debug模式
      */
-    constructor(configs, target,multiple=false,debug=false) {
+    constructor(configs:any, target:any,multiple=false,debug=false) {
         super();
         this.configs = configs;
         this.target = target != null ? target : this;
@@ -30,8 +34,9 @@ class MysqlInstaller extends  EventEmitter{
         await this.install();
     }
 
-    log(...data) {
+    log(...data:any) {
         if (this.debug) {
+            // @ts-ignore
             console.log(`🐰😁[MYSQL]`, `${this.dateTime()}`, ...data)
         }
     }
@@ -39,8 +44,7 @@ class MysqlInstaller extends  EventEmitter{
     dateTime() {
         const date = new Date();
         // let f ='hh:mm:ss';
-        let f = `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
-        return f;
+        return `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
     }
 
     async install() {
@@ -56,7 +60,7 @@ class MysqlInstaller extends  EventEmitter{
 
     }
 
-    randomInt(maxNum) {
+    randomInt(maxNum:number) {
         if (maxNum <= 0) {
             return 0;
         }
@@ -77,15 +81,15 @@ class MysqlInstaller extends  EventEmitter{
         return e;
     }
 
-    addClient(key, client) {
+    addClient(key:string, client:any) {
         this.target.__SQL_CACHE[key] = client;
     }
 
-    removeClient(key) {
+    removeClient(key:string) {
         delete this.target.__SQL_CACHE[key];
     }
 
-    createClient(options, name) {
+    createClient(options:any, name?:string|null) {
         const _this = this;
         return new Promise(async (resolve, reject)=>{
             if (!name) {
@@ -98,18 +102,19 @@ class MysqlInstaller extends  EventEmitter{
             const config = options;
             _this.log('createClient',name);
             // 使用连接池，提升性能
-            const pool = await Mysql.createPool(config);
+            const pool = await createPool(config);
             const temp_rds = (transactions = false) => {
                 if (_this.target.__SQL_CACHE.RDS) {
                     return _this.target.__SQL_CACHE.RDS;
                 }
+                const RDSClient = require('ali-rds');
                 _this.target.__SQL_CACHE.RDS = new RDSClient (options);
                 return _this.target.__SQL_CACHE.RDS;
             }
-            const temp_sql_trans = (sqlArr) => {
+            const temp_sql_trans = (sqlArr:any) => {
                 _this.log('temp_sql_trans',sqlArr);
                 return new Promise((resolve1,reject1) => {
-                    pool.getConnection(async (err, conn) => {
+                    pool.getConnection(async (err:any, conn:any) => {
                         if (err) {
                             _this.log('SQL','Transaction','Error', err);
                             if (conn) {
@@ -138,13 +143,13 @@ class MysqlInstaller extends  EventEmitter{
                     });
                 });
             }
-            const temp_sql = (sql, params,transactions = false) => {
+            const temp_sql = (sql:any, params:any,transactions = false) => {
                 if (transactions){
                     return temp_sql_trans(sql);
                 }
                 _this.log('exc SQL',sql, params);
                 return new Promise((resolve1,reject1) => {
-                    pool.getConnection(async (err, conn) => {
+                    pool.getConnection(async (err, conn:any) => {
                         if (err) {
                             _this.log('SQL', err);
                             if (conn) {
@@ -177,16 +182,16 @@ class MysqlInstaller extends  EventEmitter{
             }
 
             
-            pool.on('acquire',(connection)=>{
+            pool.on('acquire',(connection:any)=>{
                 _this.log(`client[ ${id} ]: acquire`);
             })
-            pool.on('connection',(connection)=>{
+            pool.on('connection',(connection:any)=>{
                 _this.log(`client[ ${id} ]: connection`);
             })
             pool.on('enqueue',()=>{
                 _this.log(`client[ ${id} ]: enqueue`);
             })
-            pool.on('release',(connection)=>{
+            pool.on('release',(connection:any)=>{
                 _this.log(`client[ ${id} ]: release`);
             })
             resolve(pool);
@@ -194,5 +199,4 @@ class MysqlInstaller extends  EventEmitter{
     }
 
 }
-// export default MysqlInstaller;
-module.exports=MysqlInstaller;
+export default MysqlInstaller;
