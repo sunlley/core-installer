@@ -1,12 +1,8 @@
-import {EventEmitter} from "events";
+import BaseInstaller from './installer';
 import {createPool} from 'mysql2';
 
-class MysqlInstaller extends  EventEmitter{
+class Installer extends  BaseInstaller{
     private configs:any;
-    private target:any;
-    private multiple:boolean;
-    private debug:boolean;
-    private initial:boolean=false;
 
     /**
      *
@@ -16,35 +12,14 @@ class MysqlInstaller extends  EventEmitter{
      * @param debug 是否debug模式
      */
     constructor(configs:any, target:any,multiple=false,debug=false) {
-        super();
+        super('MYSQL',target,multiple,debug);
         this.configs = configs;
-        this.target = target != null ? target : this;
-        this.multiple = multiple;
-        this.debug = debug;
         if (!this.target.__SQL_CACHE) {
             this.target.__SQL_CACHE = {};
         }
         if (!this.target.SQL){
             this.target.SQL={}
         }
-    }
-
-    async load() {
-        this.emit('initial')
-        await this.install();
-    }
-
-    log(...data:any) {
-        if (this.debug) {
-            // @ts-ignore
-            console.log(`🐰😁[MYSQL]`, `${this.dateTime()}`, ...data)
-        }
-    }
-
-    dateTime() {
-        const date = new Date();
-        // let f ='hh:mm:ss';
-        return `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
     }
 
     async install() {
@@ -55,30 +30,6 @@ class MysqlInstaller extends  EventEmitter{
         }else{
             await this.createClient(this.configs);
         }
-        this.initial=true;
-        this.emit('ready')
-
-    }
-
-    randomInt(maxNum:number) {
-        if (maxNum <= 0) {
-            return 0;
-        }
-        const minNum = 0;
-        try {
-            return parseInt(`${Math.random() * (maxNum - minNum + 1) + minNum}`, 10);
-        } catch (e) {
-        }
-        return 0;
-    }
-
-    randomStr(length = 10) {
-        let e = '';
-        for (let n = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890', o = 0;
-             o < length; o++) {
-            e += n.charAt(Math.floor(Math.random() * n.length));
-        }
-        return e;
     }
 
     addClient(key:string, client:any) {
@@ -199,4 +150,4 @@ class MysqlInstaller extends  EventEmitter{
     }
 
 }
-export default MysqlInstaller;
+export default Installer;

@@ -1,61 +1,20 @@
-import {EventEmitter} from "events";
+import BaseInstaller from './installer';
 import {AbortController} from "node-abort-controller";
 import axios from 'axios';
 
-class HttpInstaller extends EventEmitter {
+class Installer extends BaseInstaller {
     private configs:any;
-    private target:any;
-    private multiple:boolean;
-    private debug:boolean;
-    private signals:any={}
-    private initial:boolean=false;
+    /**
+     * 取消标识
+     * @private
+     */
+    private signals:any={};
     constructor(configs:any, target?:any, multiple = false, debug = false) {
-        super();
+        super('HTTP',target,multiple,debug);
         this.configs = configs;
-        this.target = target != null ? target : this;
-        this.multiple = multiple;
-        this.debug = debug;
         if (!this.target.HTTP) {
             this.target.HTTP = {}
         }
-    }
-
-    log(...data:any) {
-        if (this.debug) {
-            // @ts-ignore
-            console.log(`🐰😁[HTTP]`, `${this.dateTime()}`, ...data)
-        }
-    }
-
-    dateTime() {
-        const date = new Date();
-        return `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
-    }
-
-    randomInt(maxNum:number) {
-        if (maxNum <= 0) {
-            return 0;
-        }
-        const minNum = 0;
-        try {
-            return parseInt(`${Math.random() * (maxNum - minNum + 1) + minNum}`, 10);
-        } catch (e) {
-        }
-        return 0;
-    }
-
-    randomStr(length = 10) {
-        let e = '';
-        for (let n = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890', o = 0;
-             o < length; o++) {
-            e += n.charAt(Math.floor(Math.random() * n.length));
-        }
-        return e;
-    }
-
-    async load() {
-        this.emit('initial')
-        await this.install();
     }
 
     async install() {
@@ -171,4 +130,4 @@ class HttpInstaller extends EventEmitter {
         })
     }
 }
-export default HttpInstaller;
+export default Installer;

@@ -1,6 +1,6 @@
 {
   "name": "core-installer",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "JavaScript library of data standards.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -37,6 +37,7 @@
     "ali-rds": "^4.1.0",
     "axios": "^1.2.6",
     "events": "^3.3.0",
+    "mongoose": "^6.9.0",
     "mysql2": "^3.1.0",
     "node-abort-controller": "^3.1.1",
     "redis": "^4.6.3"
