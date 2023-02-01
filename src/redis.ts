@@ -519,16 +519,16 @@ class Installer extends BaseInstaller {
                 url
             };
             const configKeys = [
-                'name', 'username', 'password', 'database',
+                'name', 'username', 'password', 'database','socket',
                 'commandsQueueMaxLength', 'disableOfflineQueue',
                 'readonly', 'legacyMode', 'pingInterval'
             ];
-            for (const key in configKeys) {
+            for (const key of configKeys) {
                 if (redisConfig[key] != null) {
                     option[key] = redisConfig[key];
                 }
             }
-
+            _this.log(`client[ ${id} ]: option`,option);
             // connect ready reconnecting drain end error data ping-interval
             client = createClient(option);
             client.on('connect', () => {

@@ -43,11 +43,12 @@ class Installer extends BaseInstaller {
             };
             if (!name) {
                 name = null;
-                _this.log(`create client [default]`);
+                _this.log(`create client [default]`,config);
             } else {
                 name = name.toUpperCase();
-                _this.log(`create client [${name}]`);
+                _this.log(`create client [${name}]`,config);
             }
+
             const client = axios.create(config);
             const post = (path:string, params?:any) => {
                 return new Promise((resolve1, reject1) => {

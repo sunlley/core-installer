@@ -52,6 +52,7 @@ class Installer extends  BaseInstaller{
 
             const config = options;
             _this.log('createClient',name);
+            this.log(`createClient[ ${name} ]: option`,config);
             // 使用连接池，提升性能
             const pool = await createPool(config);
             const temp_rds = (transactions = false) => {
