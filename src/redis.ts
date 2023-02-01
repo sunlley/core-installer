@@ -445,10 +445,11 @@ class Installer extends BaseInstaller {
      *     onRetryStrategy?:Function
      * }}
      * @param target redis绑定对象
+     * @param multiple 是否多配置模式
      * @param debug 是否debug模式
      */
-    constructor(configs: any, target: any, debug = false) {
-        super('REDIS',target,false,debug);
+    constructor(configs: any, target: any, multiple = false, debug = false) {
+        super('REDIS', target, multiple, debug);
         this.configs = configs;
         if (!this.target.__REDIS_CACHE) {
             this.target.__REDIS_CACHE = {};
@@ -456,22 +457,39 @@ class Installer extends BaseInstaller {
         if (!this.target.REDIS) {
             this.target.REDIS = {};
         }
-        this.bindFunctions();
     }
 
-    bindFunctions() {
+    bindCommands() {
+        let keys = Object.keys(this.target.__REDIS_CACHE);
+        if (keys.length === 1) {
+            let client = this.target.__REDIS_CACHE[keys[0]];
+            this.bindClient(client, null);
+        } else if (keys.length > 1) {
+            for (const key of keys) {
+                let client = this.target.__REDIS_CACHE[key];
+                this.bindClient(client, key);
+            }
+        }
+    }
+
+    bindClient(client: any, name: any) {
+        if (!client) {
+            return;
+        }
         let _this = this;
-        for (const name in commands) {
-            let commandValue = commands[name];
-            // @ts-ignore
-            _this[name] = (...args: any) => {
-                _this.log(`Call [${name}]`, ' | ', ...args);
+        for (const command in commands) {
+            let commandValue = commands[command];
+            const method = (...args: any) => {
+                if (name) {
+                    _this.log(`Call [${name}][${command}]`, ' | ', ...args);
+                } else {
+                    _this.log(`Call [${command}]`, ' | ', ...args);
+                }
                 return new Promise(async (resolve, reject) => {
                     if (!_this.initial) {
                         reject(new Error('Please call load() first !!'))
                     }
                     try {
-                        let client = await _this.getClient();
                         let result = await client[commandValue](...args);
                         resolve(result);
                     } catch (error) {
@@ -480,35 +498,48 @@ class Installer extends BaseInstaller {
                 })
 
             }
-            _this.target.REDIS[name] = async (...args: any) => {
-                // @ts-ignore
-                return _this[name](...args);
+            if (name) {
+                if (!_this.target.REDIS[name]) {
+                    _this.target.REDIS[name] = {};
+                }
+                _this.target.REDIS[name][command] = method;
+            } else {
+                _this.target.REDIS[command] = method;
             }
-            _this.target.REDIS[`${name}Async`] = async (...args: any) => {
-                // @ts-ignore
-                return _this[name](...args);
-            }
-
         }
     }
 
     async install() {
-        await this.createClient(this.configs);
+        if (this.multiple) {
+            for (const key in this.configs) {
+                await this.createClient(this.configs[key], key);
+            }
+        } else {
+            await this.createClient(this.configs, null);
+        }
+        this.bindCommands();
     }
 
     addClient(key: string, client: any) {
+        if (!key) {
+            key = 'default';
+        }
+        key = key.toUpperCase();
         this.target.__REDIS_CACHE[key] = client;
     }
 
     removeClient(key: string) {
+        if (!key) {
+            key = 'default';
+        }
+        key = key.toUpperCase();
         delete this.target.__REDIS_CACHE[key];
     }
 
-    async createClient(redisConfig: any) {
+    async createClient(redisConfig: any, name: any) {
         let _this = this;
         return new Promise(async (resolve, reject) => {
             const id = _this.randomStr();
-            let client: any;
             let url = '';
             if (redisConfig.url) {
                 url = redisConfig.url;
@@ -519,7 +550,7 @@ class Installer extends BaseInstaller {
                 url
             };
             const configKeys = [
-                'name', 'username', 'password', 'database','socket',
+                'name', 'username', 'password', 'database', 'socket',
                 'commandsQueueMaxLength', 'disableOfflineQueue',
                 'readonly', 'legacyMode', 'pingInterval'
             ];
@@ -528,9 +559,9 @@ class Installer extends BaseInstaller {
                     option[key] = redisConfig[key];
                 }
             }
-            _this.log(`client[ ${id} ]: option`,option);
+            _this.log(`client[ ${id} ]: option`, option);
             // connect ready reconnecting drain end error data ping-interval
-            client = createClient(option);
+            const client = createClient(option);
             client.on('connect', () => {
                 _this.log(`client[ ${id} ]: connect`);
             });
@@ -539,51 +570,31 @@ class Installer extends BaseInstaller {
                 _this.addClient(id, client);
                 resolve(client);
             });
-
             client.on('reconnecting', () => {
                 _this.log(`client[ ${id} ]: reconnecting`);
             });
             client.on('drain', () => {
                 _this.log(`client[ ${id} ]: drain`);
             });
-
             client.on('data', (data: any) => {
                 _this.log(`client[ ${id} ]: data`, data);
             });
             client.on('ping-interval', (reply: any) => {
                 _this.log(`client[ ${id} ]: ping-interval`, reply);
             });
-
-
             client.on('end', () => {
                 _this.log(`client[ ${id} ]: close`);
                 client.quit();
                 _this.removeClient(id);
             });
-
             client.on('error', (error: any) => {
                 _this.log(`client[ ${id} ]: error`, error);
                 client.quit();
                 _this.removeClient(id);
             });
             await client.connect();
-
-
+            this.addClient(name, client);
         });
-    }
-
-    async getClient() {
-        const keys = Object.keys(this.target.__REDIS_CACHE);
-        let client;
-        if (keys.length > 0) {
-            const index = this.randomInt(keys.length - 1);
-            const key = keys[index];
-            client = this.target.__REDIS_CACHE[key];
-        }
-        if (!client) {
-            client = await this.createClient(this.configs);
-        }
-        return client;
     }
 
 }
