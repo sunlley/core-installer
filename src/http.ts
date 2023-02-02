@@ -4,6 +4,7 @@ import axios from 'axios';
 
 class Installer extends BaseInstaller {
     private configs:any;
+    private baseParams:any;
     /**
      * 取消标识
      * @private
@@ -12,6 +13,8 @@ class Installer extends BaseInstaller {
     constructor(configs:any, target?:any, multiple = false, debug = false) {
         super('HTTP',target,multiple,debug);
         this.configs = configs;
+        this.baseParams = configs.baseParams;
+        delete this.configs.baseParams;
         if (!this.target.HTTP) {
             this.target.HTTP = {}
         }
@@ -30,6 +33,18 @@ class Installer extends BaseInstaller {
         this.initial = true;
         this.emit('ready')
 
+    }
+
+    _matchParams(params:any){
+        if (!this.baseParams){
+            return params?params:{};
+        }
+        if (!params){
+            params=JSON.parse(JSON.stringify(this.baseParams))
+        }else{
+            params=Object.assign(JSON.parse(JSON.stringify(this.baseParams)),params);
+        }
+        return params;
     }
 
     createClient(options:any, name?:string|null) {
@@ -51,6 +66,7 @@ class Installer extends BaseInstaller {
 
             const client = axios.create(config);
             const post = (path:string, params?:any) => {
+                params = _this._matchParams(params);
                 return new Promise((resolve1, reject1) => {
                     if (typeof path !== 'string' || path === '') {
                         reject1(new Error(`No path found or path's type is not string`));
@@ -75,6 +91,7 @@ class Installer extends BaseInstaller {
                 });
             }
             const get = (path:string, params?:any) => {
+                params = _this._matchParams(params);
                 return new Promise((resolve1, reject1) => {
                     if (typeof path !== 'string' || path === '') {
                         reject1(new Error(`No path found or path's type is not string`));
