@@ -5,6 +5,13 @@ class Installer extends BaseInstaller {
     private configs: any;
     private schemas: any;
 
+    /**
+     *
+     * @param configs {ConnectOptions}
+     * @param target {Object}
+     * @param multiple {boolean}
+     * @param debug {boolean}
+     */
     constructor(configs: any, target: any, multiple = false, debug = false) {
         super('MONGO', target, multiple, debug)
         this.configs = configs;
@@ -47,8 +54,32 @@ class Installer extends BaseInstaller {
 
     async createClientWithUri(uri: string, config: ConnectOptions, name: string) {
         name = name ? name.toUpperCase() : '';
-        const conn = mongoose.createConnection(uri, config)
-        this.log(`client[ ${name} ]: option`,{uri,config});
+        /*
+        auth={username,password}
+         */
+        const configKeys=['bufferCommands','dbName','user','pass','autoIndex','autoCreate',
+        'replicaSet','tls','ssl','tlsCertificateFile','tlsCertificateKeyFile','tlsCertificateKeyFilePassword',
+        'tlsCAFile','tlsAllowInvalidCertificates','tlsAllowInvalidHostnames','tlsInsecure',
+        'connectTimeoutMS','socketTimeoutMS','compressors','zlibCompressionLevel','srvMaxHosts',
+        'srvServiceName','maxPoolSize','minPoolSize','maxConnecting','maxIdleTimeMS',
+        'waitQueueTimeoutMS','maxStalenessSeconds',
+        'auth','authSource','authMechanism','authMechanismProperties','localThresholdMS','serverSelectionTimeoutMS',
+        'heartbeatFrequencyMS','minHeartbeatFrequencyMS','retryReads','retryWrites','directConnection','loadBalanced',
+        'wtimeoutMS','keepAlive','keepAliveInitialDelay','forceServerObjectId','promiseLibrary',
+        'loggerLevel','logger','monitorCommands','serverApi','autoEncryption','driverInfo',
+            'proxyHost','proxyPort','proxyUsername','proxyPassword'];
+        let option:ConnectOptions={};
+        for (const configKey of configKeys) {
+            // @ts-ignore
+            let value = config[configKey];
+            if (value!=null){
+                // @ts-ignore
+                option[configKey]=value;
+            }
+        }
+
+        const conn = mongoose.createConnection(uri, option);
+        this.log(`client[ ${name} ]: option`,{uri,option});
         const keys = Object.keys(this.schemas);
         for (let key of keys) {
             conn.model(key, new mongoose.Schema(JSON.parse(JSON.stringify(this.schemas[key]))));

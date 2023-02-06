@@ -508,6 +508,13 @@ class Installer extends BaseInstaller {
                 _this.target.REDIS[command] = method;
             }
         }
+        if (_this.multiple){
+            _this.log('bindClient',Object.keys(_this.target.REDIS));
+        }else {
+            if (_this.target.REDIS){
+                _this.log('bindClient','default')
+            }
+        }
     }
 
     async install() {
@@ -589,13 +596,11 @@ class Installer extends BaseInstaller {
                 _this.removeClient(id);
             });
             client.on('error', (error: any) => {
-                _this.log(`client[ ${id} ]: error`, error);
+                _this.log(`client[ ${id} ] | [${url}]: error`, error);
                 client.quit();
                 _this.removeClient(id);
             });
             _this.addClient(name, client);
-
-
             await client.connect();
         });
     }
