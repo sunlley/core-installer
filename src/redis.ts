@@ -569,6 +569,9 @@ class Installer extends BaseInstaller {
                 }
             }
             _this.log(`client[ ${id} ]: option`,`name:${name}`, option);
+            if (!option.pingInterval){
+                option.pingInterval=1000;
+            }
             // connect ready reconnecting drain end error data ping-interval
             const client = createClient(option);
             client.on('connect', () => {
@@ -606,5 +609,6 @@ class Installer extends BaseInstaller {
     }
 
 }
+//mongo 52.77.221.75:9502 -u root -p Mr0s8#dFdf#8s386di2ds
 
 export default Installer;

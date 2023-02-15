@@ -58,7 +58,7 @@ class Installer extends BaseInstaller {
         auth={username,password}
          */
         const configKeys=['bufferCommands','dbName','user','pass','autoIndex','autoCreate',
-        'replicaSet','tls','ssl','tlsCertificateFile','tlsCertificateKeyFile','tlsCertificateKeyFilePassword',
+        'replicaSet','tls','ssl','sslCA','sslValidate','tlsCertificateFile','tlsCertificateKeyFile','tlsCertificateKeyFilePassword',
         'tlsCAFile','tlsAllowInvalidCertificates','tlsAllowInvalidHostnames','tlsInsecure',
         'connectTimeoutMS','socketTimeoutMS','compressors','zlibCompressionLevel','srvMaxHosts',
         'srvServiceName','maxPoolSize','minPoolSize','maxConnecting','maxIdleTimeMS',
@@ -67,7 +67,7 @@ class Installer extends BaseInstaller {
         'heartbeatFrequencyMS','minHeartbeatFrequencyMS','retryReads','retryWrites','directConnection','loadBalanced',
         'wtimeoutMS','keepAlive','keepAliveInitialDelay','forceServerObjectId','promiseLibrary',
         'loggerLevel','logger','monitorCommands','serverApi','autoEncryption','driverInfo',
-            'proxyHost','proxyPort','proxyUsername','proxyPassword'];
+            'proxyHost','proxyPort','proxyUsername','proxyPassword','useNewUrlParser','useUnifiedTopology'];
         let option:ConnectOptions={};
         for (const configKey of configKeys) {
             // @ts-ignore
