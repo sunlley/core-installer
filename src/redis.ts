@@ -447,7 +447,7 @@ class Installer extends BaseInstaller {
      * }}
      * @param target redis绑定对象
      * @param multiple 是否多配置模式
-     * @param debug 是否debug模式
+     * @param debug {boolean|string} 是否debug模式
      */
     constructor(configs: any, target: any, multiple = false, debug = false) {
         super('REDIS', target, multiple, debug);
@@ -474,26 +474,37 @@ class Installer extends BaseInstaller {
     }
 
     bindClient(client: any, name: any) {
+        let _this = this;
         if (!client) {
+            _this.logError('bindClient', 'No Client Found')
             return;
         }
-        let _this = this;
         for (const command in commands) {
             let commandValue = commands[command];
             const method = (...args: any) => {
                 if (name) {
-                    _this.log(`Call [${name}][${command}]`, ' | ', ...args);
+                    _this.logInfo(`Call [${name}][${command}]`, ' | ', ...args);
                 } else {
-                    _this.log(`Call [${command}]`, ' | ', ...args);
+                    _this.logInfo(`Call [${command}]`, ' | ', ...args);
                 }
                 return new Promise(async (resolve, reject) => {
                     if (!_this.initial) {
+                        if (name) {
+                            _this.logError(`Call [${name}][${command}]`, ' | ', 'Please call load() first !!');
+                        } else {
+                            _this.logError(`Call [${command}]`, ' | ', 'Please call load() first !!');
+                        }
                         reject(new Error('Please call load() first !!'))
                     }
                     try {
                         let result = await client[commandValue](...args);
                         resolve(result);
                     } catch (error) {
+                        if (name) {
+                            _this.logError(`Call [${name}][${command}]`, ' | ', error);
+                        } else {
+                            _this.logError(`Call [${command}]`, ' | ', error);
+                        }
                         reject(error);
                     }
                 })
@@ -508,16 +519,17 @@ class Installer extends BaseInstaller {
                 _this.target.REDIS[command] = method;
             }
         }
-        if (_this.multiple){
-            _this.log('bindClient',Object.keys(_this.target.REDIS));
-        }else {
-            if (_this.target.REDIS){
-                _this.log('bindClient','default')
+        if (_this.multiple) {
+            _this.logInfo('bindClient', Object.keys(_this.target.REDIS));
+        } else {
+            if (_this.target.REDIS) {
+                _this.logInfo('bindClient', 'default')
             }
         }
     }
 
     async install() {
+        this.logInfo('install')
         if (this.multiple) {
             for (const key in this.configs) {
                 await this.createClient(this.configs[key], key);
@@ -548,7 +560,7 @@ class Installer extends BaseInstaller {
         let _this = this;
         return new Promise(async (resolve, reject) => {
             const id = _this.randomStr();
-            _this.log(`client[ ${id} ]: config`,`name:${name}`, redisConfig);
+            _this.logInfo(`client[ ${id} ]: config`, `name:${name}`, redisConfig);
             let url = '';
             if (redisConfig.url) {
                 url = redisConfig.url;
@@ -568,38 +580,38 @@ class Installer extends BaseInstaller {
                     option[key] = redisConfig[key];
                 }
             }
-            _this.log(`client[ ${id} ]: option`,`name:${name}`, option);
-            if (!option.pingInterval){
-                option.pingInterval=1000;
+            _this.logInfo(`client[ ${id} ]: option`, `name:${name}`, option);
+            if (!option.pingInterval) {
+                option.pingInterval = 1000;
             }
             // connect ready reconnecting drain end error data ping-interval
             const client = createClient(option);
             client.on('connect', () => {
-                _this.log(`client[ ${id} ]: connect`);
+                _this.logSys(`client[ ${id} ]: connect`);
             });
             client.on('ready', () => {
-                _this.log(`client[ ${id} ]: ready`);
+                _this.logSys(`client[ ${id} ]: ready`);
                 resolve(client);
             });
             client.on('reconnecting', () => {
-                _this.log(`client[ ${id} ]: reconnecting`);
+                _this.logSys(`client[ ${id} ]: reconnecting`);
             });
             client.on('drain', () => {
-                _this.log(`client[ ${id} ]: drain`);
+                _this.logSys(`client[ ${id} ]: drain`);
             });
             client.on('data', (data: any) => {
-                _this.log(`client[ ${id} ]: data`, data);
+                _this.logSys(`client[ ${id} ]: data`, data);
             });
             client.on('ping-interval', (reply: any) => {
-                _this.log(`client[ ${id} ]: ping-interval`, reply);
+                _this.logSys(`client[ ${id} ]: ping-interval`, reply);
             });
             client.on('end', () => {
-                _this.log(`client[ ${id} ]: close`);
+                _this.logSys(`client[ ${id} ]: close`);
                 client.quit();
                 _this.removeClient(id);
             });
             client.on('error', (error: any) => {
-                _this.log(`client[ ${id} ] | [${url}]: error`, error);
+                _this.logSys(`client[ ${id} ] | [${url}]: error`, error);
                 client.quit();
                 _this.removeClient(id);
             });
@@ -607,8 +619,6 @@ class Installer extends BaseInstaller {
             await client.connect();
         });
     }
-
 }
-//mongo 52.77.221.75:9502 -u root -p Mr0s8#dFdf#8s386di2ds
 
 export default Installer;

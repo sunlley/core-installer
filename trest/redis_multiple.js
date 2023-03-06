@@ -2,11 +2,12 @@ const {RedisInstaller}=require('../dist');
 const TARGET={};
 const CONFIG_REDIS={
     REDIS1:{
-        host:'127.0.0.1',
+        host:'192.168.3.40',
+        // host:'127.0.0.1',
         port:6379
     },
     REDIS2:{
-        host:'127.0.0.1',
+        host:'192.168.3.40',
         port:6379
     }
 }
@@ -19,7 +20,7 @@ const delay = (time = 1000) => {
 }
 function installRedis() {
     if (CONFIG_REDIS) {
-        new RedisInstaller(CONFIG_REDIS, TARGET,true,true).load();
+        new RedisInstaller(CONFIG_REDIS, TARGET,true,'error').load();
     }
 }
 
@@ -27,7 +28,7 @@ const test = async () => {
     console.log('Start');
     installRedis();
     await delay(2000);
-    await TARGET.REDIS.REDIS1.SET('REDIS1:VERSE','123123123');
+    await TARGET.REDIS.REDIS1.SET('REDIS1:VERSE',{name:'123'});
     let testResult = await TARGET.REDIS.REDIS1.GET('REDIS1:VERSE');
     console.log('testResult',testResult);
     await TARGET.REDIS.REDIS2.SET('REDIS2:VERSE','ABC123123123');

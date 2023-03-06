@@ -6,6 +6,7 @@
     "forin": false,
     "variable-name": false,
     "prefer-const": false,
-    "no-shadowed-variable": false
+    "no-shadowed-variable": false,
+    "triple-equals": false
   }
 }

@@ -1,5 +1,16 @@
 import BaseInstaller from './installer';
 import mongoose, {ConnectOptions} from "mongoose";
+const CONFIG_KEYS=['bufferCommands','dbName','user','pass','autoIndex','autoCreate',
+    'replicaSet','tls','ssl','sslCA','sslValidate','tlsCertificateFile','tlsCertificateKeyFile','tlsCertificateKeyFilePassword',
+    'tlsCAFile','tlsAllowInvalidCertificates','tlsAllowInvalidHostnames','tlsInsecure',
+    'connectTimeoutMS','socketTimeoutMS','compressors','zlibCompressionLevel','srvMaxHosts',
+    'srvServiceName','maxPoolSize','minPoolSize','maxConnecting','maxIdleTimeMS',
+    'waitQueueTimeoutMS','maxStalenessSeconds',
+    'auth','authSource','authMechanism','authMechanismProperties','localThresholdMS','serverSelectionTimeoutMS',
+    'heartbeatFrequencyMS','minHeartbeatFrequencyMS','retryReads','retryWrites','directConnection','loadBalanced',
+    'wtimeoutMS','keepAlive','keepAliveInitialDelay','forceServerObjectId','promiseLibrary',
+    'loggerLevel','logger','monitorCommands','serverApi','autoEncryption','driverInfo',
+    'proxyHost','proxyPort','proxyUsername','proxyPassword','useNewUrlParser','useUnifiedTopology'];
 
 class Installer extends BaseInstaller {
     private configs: any;
@@ -26,6 +37,7 @@ class Installer extends BaseInstaller {
     }
 
     async install() {
+        this.logInfo('install')
         if (this.multiple) {
             const keys = Object.keys(this.configs);
             for (const key of keys) {
@@ -57,19 +69,8 @@ class Installer extends BaseInstaller {
         /*
         auth={username,password}
          */
-        const configKeys=['bufferCommands','dbName','user','pass','autoIndex','autoCreate',
-        'replicaSet','tls','ssl','sslCA','sslValidate','tlsCertificateFile','tlsCertificateKeyFile','tlsCertificateKeyFilePassword',
-        'tlsCAFile','tlsAllowInvalidCertificates','tlsAllowInvalidHostnames','tlsInsecure',
-        'connectTimeoutMS','socketTimeoutMS','compressors','zlibCompressionLevel','srvMaxHosts',
-        'srvServiceName','maxPoolSize','minPoolSize','maxConnecting','maxIdleTimeMS',
-        'waitQueueTimeoutMS','maxStalenessSeconds',
-        'auth','authSource','authMechanism','authMechanismProperties','localThresholdMS','serverSelectionTimeoutMS',
-        'heartbeatFrequencyMS','minHeartbeatFrequencyMS','retryReads','retryWrites','directConnection','loadBalanced',
-        'wtimeoutMS','keepAlive','keepAliveInitialDelay','forceServerObjectId','promiseLibrary',
-        'loggerLevel','logger','monitorCommands','serverApi','autoEncryption','driverInfo',
-            'proxyHost','proxyPort','proxyUsername','proxyPassword','useNewUrlParser','useUnifiedTopology'];
         let option:ConnectOptions={};
-        for (const configKey of configKeys) {
+        for (const configKey of CONFIG_KEYS) {
             // @ts-ignore
             let value = config[configKey];
             if (value!=null){
@@ -77,9 +78,8 @@ class Installer extends BaseInstaller {
                 option[configKey]=value;
             }
         }
-
+        this.logSys(`client[ ${name} ]: option`,{uri,option})
         const conn = mongoose.createConnection(uri, option);
-        this.log(`client[ ${name} ]: option`,{uri,option});
         const keys = Object.keys(this.schemas);
         for (let key of keys) {
             conn.model(key, new mongoose.Schema(JSON.parse(JSON.stringify(this.schemas[key]))));

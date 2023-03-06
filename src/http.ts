@@ -1,4 +1,4 @@
-import BaseInstaller from './installer';
+import BaseInstaller, { Cluster } from './installer';
 import {AbortController} from "node-abort-controller";
 import axios from 'axios';
 
@@ -10,7 +10,7 @@ class Installer extends BaseInstaller {
      * @private
      */
     private signals:any={};
-    constructor(configs:any, target?:any, multiple = false, debug = false) {
+    constructor(configs:any, target?:any, multiple = false, debug=false) {
         super('HTTP',target,multiple,debug);
         this.configs = configs;
         this.baseParams = configs.baseParams;
@@ -21,6 +21,7 @@ class Installer extends BaseInstaller {
     }
 
     async install() {
+        this.logInfo('install')
         if (this.multiple) {
             const keys = Object.keys(this.configs);
             for (const key of keys) {
@@ -58,10 +59,10 @@ class Installer extends BaseInstaller {
             };
             if (!name) {
                 name = null;
-                _this.log(`create client [default]`,config);
+                _this.logInfo(`create client [default]`,config);
             } else {
                 name = name.toUpperCase();
-                _this.log(`create client [${name}]`,config);
+                _this.logInfo(`create client [${name}]`,config);
             }
 
             const client = axios.create(config);
@@ -85,6 +86,7 @@ class Installer extends BaseInstaller {
                             resolve1(result.data);
                         })
                         .catch((error) => {
+                            _this.logError('post','path',error)
                             reject1(error);
                         });
 
@@ -122,6 +124,8 @@ class Installer extends BaseInstaller {
                             resolve1(result.data);
                         })
                         .catch((error) => {
+                            _this.logError('get','path',error)
+
                             reject1(error);
                         })
                 });
@@ -129,7 +133,10 @@ class Installer extends BaseInstaller {
 
             const cancel = (_cancel_key:string) => {
                 if (_this.signals[_cancel_key]){
+                    _this.logInfo('cancel',_cancel_key);
                     _this.signals[_cancel_key].abort()
+                }else{
+                    _this.logInfo('cancel',`Cannot found signals:${_cancel_key}`);
                 }
             }
             const getClient=()=>{
