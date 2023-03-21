@@ -44,11 +44,21 @@ class Installer extends BaseInstaller {
 
     querySql(connect: any, sql: any, params: any) {
         return new Promise((resolve, reject) => {
-            connect.query(sql, params, (error:any) => {
+            connect.query(sql, params, (error:any,result:any) => {
                 if (error) {
                     reject(error)
                 } else {
-                    resolve(true)
+                    // let result={
+                    //     fieldCount: 0,
+                    //     affectedRows: 1,
+                    //     insertId: 0,
+                    //     info: 'Rows matched: 1  Changed: 1  Warnings: 0',
+                    //     serverStatus: 35,
+                    //     warningStatus: 0,
+                    //     changedRows: 1
+                    //
+                    // }
+                    resolve(result);
                 }
             })
         })
@@ -101,8 +111,9 @@ class Installer extends BaseInstaller {
                                 } else {
                                     try {
                                         for (let sql of sqlArr) {
-                                            // @ts-ignore
-                                            await this.querySql(connection, sql.sql, sql.params);
+
+                                            let result = await this.querySql(connection, sql.sql, sql.params);
+                                            _this.logInfo('SQL', 'Transaction', 'Result', result);
                                         }
                                         connection.commit((errorCommit)=>{
                                             if (errorCommit){

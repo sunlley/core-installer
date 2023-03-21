@@ -21,7 +21,7 @@ const delay = (time = 1000) => {
 }
 async function install() {
     if (CONFIG) {
-        await new MysqlInstaller(CONFIG, TARGET,true,'error').load();
+        await new MysqlInstaller(CONFIG, TARGET,true,'error|info').load();
     }
 }
 
@@ -31,11 +31,11 @@ const test = async () => {
     await delay(2000);
     let begins=[
         {
-            sql:'insert into users (username1,password) values(?,?)',
+            sql:'insert into users (username,password) values(?,?)',
             params:['123','123123']
         }, {
-            sql:'insert into users (username,password) values(?,?)',
-            params:['123','123123567567']
+            sql:'update  users set username=? where username=? ',
+            params:['123123','381502222242']
         }
     ]
     let result = await TARGET.SQL.UDATA(begins,[],true)
