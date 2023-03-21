@@ -32,10 +32,10 @@ const test = async () => {
     let begins=[
         {
             sql:'insert into users (username1,password) values(?,?)',
-            params:['小明','123123']
+            params:['123','123123']
         }, {
             sql:'insert into users (username,password) values(?,?)',
-            params:['小明222','123123567567']
+            params:['123','123123567567']
         }
     ]
     let result = await TARGET.SQL.UDATA(begins,[],true)
