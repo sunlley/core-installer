@@ -54,7 +54,7 @@ class Installer extends BaseInstaller {
             const id = _this.randomStr();
             const config = {
                 baseURL: options.host,
-                timeout: 10000,
+                timeout: options.timeout?options.timeout:10000,
                 headers: options.headers ? options.headers : {'Content-Type': 'application/json'}
             };
             if (!name) {
